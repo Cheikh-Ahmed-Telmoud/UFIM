@@ -1,0 +1,29 @@
+services:
+  db:
+    image: postgres:15-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=ufim_db
+      - POSTGRES_USER=ufim_user
+      - POSTGRES_PASSWORD=ufim_pass
+    ports:
+      - "5433:5432"
+
+  web:
+    build: .
+    command: sh -c "python manage.py migrate && python manage.py shell < seed_data.py && python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/app
+    ports:
+      - "8080:8000"
+    environment:
+      - DATABASE_URL=postgres://ufim_user:ufim_pass@db:5432/ufim_db
+      - DEBUG=1
+      - ALLOWED_HOSTS=*
+      - UFIM_ENCRYPTION_KEY=a_very_secure_static_32_bytes_key!
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
